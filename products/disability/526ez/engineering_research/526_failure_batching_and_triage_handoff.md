@@ -49,18 +49,12 @@ The purpouse of this knowledge transfer is to
 
 This 'batching' work described above, roughly entails:
 1. getting / building a list of submission IDs to target for the batch
-2. logging into a production connected rails terminal
-3. pasting in the IDs
-4. writting some Ruby code to 
-    a. creating a Sidekiq batch
-    b. loop over the IDs, enqueuing a sidekiq job (defined in our code) with
-    each ID
-
-    TODO:
-
-5. zip and (???) upload these batches to S3
-6. generate signed links to these batches in S3, allowing our VBA counterparts
-   to easily pull these batched fils
+2. Login to a Production connected Rails Console
+3. Import the IDs from step 1.
+4. Enque the jobs using Sidekiq and existing application objects
+5. Pull a list of successfully uploaded filenames from the S3 bucket
+6. generate signed links to these batches in S3
+This allows our VBA counterparts to easily pull these batched fils
 
 **NOTE:**
 Downstream services are
@@ -70,4 +64,43 @@ Downstream services are
     - `asdf`
 
 TODO: break down each of these steps with code
+
+### 1. Create a list of submission ids to process
+At the moment, this is simply taking a subsection of the yet to be unprocessed
+submission failures from the original ~40k
+
+### 2. Login to a production connected Rails Console
+
+### 3. Import the IDs from step 1
+### 4. Enqueue the jobs using application logic
+
+This work can be broken into 3 parts
+1. Create a sidekiq batch
+2. Loop over the submission Ids
+3. Enqueue a Job (as a part of the batch) for each ID.  That code looks like this
+
+```
+
+```
+
+This code will handle the PDF generation, ziping, and upload of each new
+submission.  On the VBA end, they will download this file (using the links we
+will generate in step 6) and run their manual process on it.
+
+Additionally, by creating a sidekiq batch we are able to view the progress of
+this work in real time at https://api.va.gov/sidekiq/batches 
+    NOTE: viewing sidekiq requires special access.  If you do not have access
+    [follow the steps here to get it.](https://depo-platform-documentation.scrollhelp.site/developer-docs/sidekiq-ui-access)
+
+
+
+### 5. Pull a list of filenames from s3
+
+```
+aws s3 ls $bucket > my_local_file.txt
+```
+
+### 6. Generate signed links for each S3 upload
+
+This allows our VBA counterparts to easily pull these batched fils.  We are currently using the following script
 
